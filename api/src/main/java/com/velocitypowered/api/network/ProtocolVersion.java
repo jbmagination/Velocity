@@ -71,6 +71,7 @@ public enum ProtocolVersion {
   private final int protocol;
   private final int snapshotProtocol;
   private final String[] names;
+  private ProtocolFlag[] protocolFlags;
 
   /**
    * Represents the lowest supported version.
@@ -138,6 +139,12 @@ public enum ProtocolVersion {
 
     this.protocol = protocol;
     this.names = names;
+    this.protocolFlags = new ProtocolFlag[0];
+  }
+
+  ProtocolVersion(int protocol, int snapshotProtocol, ProtocolFlag[] protocolFlags, String... names) {
+    this(protocol, snapshotProtocol, names);
+    this.protocolFlags = protocolFlags;
   }
 
   /**
@@ -238,6 +245,10 @@ public enum ProtocolVersion {
    */
   public boolean isLegacy() {
     return this == LEGACY;
+  }
+
+  public List<ProtocolFlag> getProtocolFlags() {
+    return ImmutableList.copyOf(protocolFlags);
   }
 
   @Override

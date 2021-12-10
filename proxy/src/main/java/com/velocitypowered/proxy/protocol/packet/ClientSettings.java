@@ -17,6 +17,7 @@
 
 package com.velocitypowered.proxy.protocol.packet;
 
+import com.velocitypowered.api.network.ProtocolFlag;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
@@ -33,6 +34,7 @@ public class ClientSettings implements MinecraftPacket {
   private byte difficulty; // 1.7 Protocol
   private short skinParts;
   private int mainHand;
+  private boolean crouchBlockEnabled; // Added in Combat Snapshots
   private boolean chatFilteringEnabled; // Added in 1.17
   private boolean clientListingAllowed; // Added in 1.18, overwrites server-list "anonymous" mode
 
@@ -40,13 +42,14 @@ public class ClientSettings implements MinecraftPacket {
   }
 
   public ClientSettings(String locale, byte viewDistance, int chatVisibility, boolean chatColors,
-      short skinParts, int mainHand, boolean chatFilteringEnabled, boolean clientListingAllowed) {
+      short skinParts, int mainHand, boolean crouchBlockEnabled, boolean chatFilteringEnabled, boolean clientListingAllowed) {
     this.locale = locale;
     this.viewDistance = viewDistance;
     this.chatVisibility = chatVisibility;
     this.chatColors = chatColors;
     this.skinParts = skinParts;
     this.mainHand = mainHand;
+    this.crouchBlockEnabled = crouchBlockEnabled;
     this.clientListingAllowed = clientListingAllowed;
   }
 
@@ -101,6 +104,14 @@ public class ClientSettings implements MinecraftPacket {
     this.mainHand = mainHand;
   }
 
+  public boolean isCrouchBlockEnabled() {
+    return crouchBlockEnabled;
+  }
+
+  public void setCrouchBlockEnabled(boolean enabled) {
+    this.crouchBlockEnabled = enabled;
+  }
+
   public boolean isChatFilteringEnabled() {
     return chatFilteringEnabled;
   }
@@ -126,6 +137,7 @@ public class ClientSettings implements MinecraftPacket {
         + ", chatColors=" + chatColors
         + ", skinParts=" + skinParts
         + ", mainHand=" + mainHand
+        + ", crouchBlockEnabled=" + crouchBlockEnabled
         + ", chatFilteringEnabled=" + chatFilteringEnabled
         + ", clientListingAllowed=" + clientListingAllowed
         + '}';
@@ -146,6 +158,11 @@ public class ClientSettings implements MinecraftPacket {
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       this.mainHand = ProtocolUtils.readVarInt(buf);
+
+      if (version.getProtocolFlags().contains(ProtocolFlag.COMBAT_TEST)
+              && version.compareTo(ProtocolVersion.MINECRAFT_1_15_COMBAT_4) >= 0) {
+        this.crouchBlockEnabled = buf.readBoolean();
+      }
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
         this.chatFilteringEnabled = buf.readBoolean();
@@ -175,6 +192,11 @@ public class ClientSettings implements MinecraftPacket {
 
     if (version.compareTo(ProtocolVersion.MINECRAFT_1_9) >= 0) {
       ProtocolUtils.writeVarInt(buf, mainHand);
+
+      if (version.getProtocolFlags().contains(ProtocolFlag.COMBAT_TEST)
+              && version.compareTo(ProtocolVersion.MINECRAFT_1_15_COMBAT_4) >= 0) {
+        buf.writeBoolean(crouchBlockEnabled);
+      }
 
       if (version.compareTo(ProtocolVersion.MINECRAFT_1_17) >= 0) {
         buf.writeBoolean(chatFilteringEnabled);
